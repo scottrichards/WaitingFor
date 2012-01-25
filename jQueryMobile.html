@@ -1,0 +1,185 @@
+<!DOCTYPE html> 
+<html>
+<head>
+<meta charset="utf-8">
+<title>jQuery Mobile Web App</title>
+<link href="jquery-mobile/jquery.mobile-1.0.min.css" rel="stylesheet" type="text/css" />
+<style type="text/css">
+@import "countdown/jquery.countdown.css";
+
+.foobar {
+	font-family: Verdana, Geneva, sans-serif;
+}
+
+/* comment this back in for digital clock version
+#glowingLayout span { display: block; float: left; width: 34px; height: 50px; 
+    background: url(countdown/img/countdownGlowing.gif) no-repeat 0px 0px; } 
+#glowingLayout span.image0 { background-position: -0px 0px; } 
+#glowingLayout span.image1 { background-position: -34px 0px; } 
+#glowingLayout span.image2 { background-position: -68px 0px; } 
+#glowingLayout span.image3 { background-position: -102px 0px; } 
+#glowingLayout span.image4 { background-position: -136px 0px; } 
+#glowingLayout span.image5 { background-position: -170px 0px; } 
+#glowingLayout span.image6 { background-position: -204px 0px; } 
+#glowingLayout span.image7 { background-position: -238px 0px; } 
+#glowingLayout span.image8 { background-position: -272px 0px; } 
+#glowingLayout span.image9 { background-position: -306px 0px; } 
+#glowingLayout span.imageDay { background-position: -340px 0px; } 
+#glowingLayout span.imageSep { background-position: -374px 0px; } 
+#glowingLayout span.imageSpace { background-position: -408px 0px; } 
+*/
+#buttonDiv {
+	clear: both;
+	padding-left: 130px;
+	padding-top: 10px;
+}
+body {
+	font-family: Verdana, Geneva, sans-serif;
+}
+.red {
+	background-color: #FCC;
+}
+</style>
+<!-- This is jquery 1.5
+<script src="jquery-mobile/jquery-1.5.min.js" type="text/javascript"></script> -->
+<script src="jquery-mobile/jquery-1.6.4.min.js" type="text/javascript"></script>
+<script src="jquery-mobile/jquery.mobile-1.0.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="countdown/jquery.countdown.js"></script>
+<script type="text/javascript">
+$(function () {
+	var now = new Date(); 
+	var gTimes = null;
+	var gTimeIndex = 0;
+	
+	$('#glowingLayout').countdown({since: now, 
+				onTick: watchCountdown,
+				compact: true,
+				format: 'DHMS'	
+				
+/*			this is the digital format comment out compact : true and put this in for digital format
+				layout: '<span class="image{d10}"></span><span class="image{d1}"></span>' + 
+        '<span class="imageDay"></span><span class="imageSpace"></span>' + 
+        '<span class="image{h10}"></span><span class="image{h1}"></span>' + 
+        '<span class="imageSep"></span>' + 
+        '<span class="image{m10}"></span><span class="image{m1}"></span>' + 
+        '<span class="imageSep"></span>' + 
+        '<span class="image{s10}"></span><span class="image{s1}"></span>' */
+				 }
+				);
+
+
+			$.ajax({	
+				url: 'times.json',
+				success: function(data)
+				{
+					  var obj = $.parseJSON(data);
+				
+						// set global gTimes to array of times containing {"time":"5","description":"5 seconds"}				
+						gTimes = obj['times'];
+							
+				},
+				error: function(data)
+				{
+						if (console && console.log){
+      				console.log( 'Error Getting Data');
+    				}
+						alert('error reading data');
+	//	  			$.mobile.hidePageLoadingMsg();
+	//				$('#alertMsg').html("Oops, error with varietals");
+	//				$.mobile.changePage($('#alertWin'), "pop");
+   			}
+
+ 			});
+	
+				
+	$('#pausebutton').toggle(function() { 
+					$("#buttonDiv span.ui-btn-text").html('Start');
+					$('#glowingLayout').countdown('pause'); 
+			}, 
+			function() { 
+					$("#buttonDiv span.ui-btn-text").html('Stop');
+					$('#glowingLayout').countdown('resume'); 
+			} 
+	); 
+
+	function showPauseTime(periods) { 
+			$('#showPauseTime').text(periods[4] + ':' + twoDigits(periods[5]) + 
+					':' + twoDigits(periods[6])); 
+	}
+	
+	function watchCountdown(periods) {
+		var seconds = periods[0] * 31557600 + periods[1] * 2629800 + periods[2] * 604800 +
+				periods[3] * 86400 + periods[4] * 3600 + periods[5] * 60 + periods[6];
+		if (seconds > getNextTimerSeconds()) {	
+    	$('#timerAlert').text(getNextTimerDescription()); 
+			nextTimer();
+		}
+		$('#monitor').text('Count ' + periods[5] + 
+        ' minutes and ' + periods[6] +  ' # seconds: ' + seconds + ' next alert in ' + getNextTimerSeconds() + ' seconds'); 
+				
+	}
+	
+	function getNextTimerSeconds() {
+		if (gTimes)
+			return gTimes[gTimeIndex].time;
+		else
+		  return -1;
+	}
+	
+	function getNextTimerDescription() {
+		if (gTimes)
+			return gTimes[gTimeIndex].description;
+		else
+			return "";
+	}
+	
+	function nextTimer() {
+		if (gTimes && gTimeIndex < gTimes.length)
+		  return (++gTimeIndex);
+		else 
+			return -1;
+	}
+
+});
+
+function supports_html5_storage() {
+  try {
+    return 'localStorage' in window && window['localStorage'] !== null;
+  } catch (e) {
+    return false;
+  }
+}
+
+
+</script>
+</head> 
+<body> 
+
+<div data-role="page" id="page">
+	<div data-role="header">
+		<h1>Waiting For</h1>
+	</div>
+	<div data-role="content">	
+    <div data-role="fieldcontain">
+      <label for="textinput">Waiting For:<br>
+      </label>
+      <input type="text" name="textinput" id="textinput" value=""  />
+    </div>
+    <div id="glowingLayout"></div>
+    <br />
+    <div id="buttonDiv">
+      <p>
+        <input id="pausebutton" type="button" value="Stop" />
+      </p>
+    </div>
+    <div id="monitor">
+  	</div>
+    <div id="timerAlert">
+  	</div>
+	</div>
+</div>
+
+
+
+</body>
+</html>
