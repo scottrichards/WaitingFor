@@ -39,17 +39,44 @@ body {
 .red {
 	background-color: #FCC;
 }
+#timerAlert {
+	text-align: center;
+	left: 20px;
+	top: 10px;
+	right: 20px;
+	bottom: 20px;
+	background-color: #FF9;
+}
 </style>
-<!-- This is jquery 1.5
-<script src="jquery-mobile/jquery-1.5.min.js" type="text/javascript"></script> -->
 <script src="jquery-mobile/jquery-1.6.4.min.js" type="text/javascript"></script>
-<script src="jquery-mobile/jquery.mobile-1.0.min.js" type="text/javascript"></script>
+<!-- jQuery Mobile -->
+<script src="jquery-mobile/jquery.mobile-1.0.min.js" type="text/javascript"> 
+
+</script>
 <script type="text/javascript" src="countdown/jquery.countdown.js"></script>
 <script type="text/javascript">
+
+var gTimes = null;
+var gTimeIndex = 0;
+	
+$(document).ready(function(e) {
+
+	
+				var url = 'times.json';
+				var params = { format : 'json' };
+				
+				$.getJSON(url, params, function(json) {
+					if (json.times) {
+						gTimes = json.times;
+					}
+				});
+
+  
+});
+
 $(function () {
 	var now = new Date(); 
-	var gTimes = null;
-	var gTimeIndex = 0;
+
 	
 	$('#glowingLayout').countdown({since: now, 
 				onTick: watchCountdown,
@@ -68,39 +95,21 @@ $(function () {
 				);
 
 
-			$.ajax({	
-				url: 'times.json',
-				success: function(data)
-				{
-					  var obj = $.parseJSON(data);
-				
-						// set global gTimes to array of times containing {"time":"5","description":"5 seconds"}				
-						gTimes = obj['times'];
-							
-				},
-				error: function(data)
-				{
-						if (console && console.log){
-      				console.log( 'Error Getting Data');
-    				}
-						alert('error reading data');
-	//	  			$.mobile.hidePageLoadingMsg();
-	//				$('#alertMsg').html("Oops, error with varietals");
-	//				$.mobile.changePage($('#alertWin'), "pop");
-   			}
-
- 			});
+		
 	
 				
-	$('#pausebutton').toggle(function() { 
-					$("#buttonDiv span.ui-btn-text").html('Start');
-					$('#glowingLayout').countdown('pause'); 
+/*	$('#pausebutton').toggle(function() { 
+				console.log("button value: " + $("#pausebutton").attr('value'));
+				$("#pausebutton").attr('value','Start');
+				$('#glowingLayout').countdown('pause'); 
 			}, 
 			function() { 
-					$("#buttonDiv span.ui-btn-text").html('Stop');
-					$('#glowingLayout').countdown('resume'); 
+				$("#pausebutton").attr('value','Stop');
+				$('#glowingLayout').countdown('resume'); 
 			} 
 	); 
+*/
+//	$('#pausebutton').click(startStopClick);
 
 	function showPauseTime(periods) { 
 			$('#showPauseTime').text(periods[4] + ':' + twoDigits(periods[5]) + 
@@ -111,8 +120,8 @@ $(function () {
 		var seconds = periods[0] * 31557600 + periods[1] * 2629800 + periods[2] * 604800 +
 				periods[3] * 86400 + periods[4] * 3600 + periods[5] * 60 + periods[6];
 		if (seconds > getNextTimerSeconds()) {	
-    	$('#timerAlert').text(getNextTimerDescription()); 
-			nextTimer();
+			$('#timerAlert').text(getNextTimerDescription()); 
+				nextTimer();
 		}
 		$('#monitor').text('Count ' + periods[5] + 
         ' minutes and ' + periods[6] +  ' # seconds: ' + seconds + ' next alert in ' + getNextTimerSeconds() + ' seconds'); 
@@ -120,14 +129,20 @@ $(function () {
 	}
 	
 	function getNextTimerSeconds() {
-		if (gTimes)
-			return gTimes[gTimeIndex].time;
-		else
+		if (gTimes) {
+			var string = gTimes[gTimeIndex].time;
+			try {
+				var number = parseInt(string);
+			} catch (e) {
+				trace(e);
+			}
+			return(number);
+		} else
 		  return -1;
 	}
 	
 	function getNextTimerDescription() {
-		if (gTimes)
+		if (gTimes && gTimeIndex < gTimes.length)
 			return gTimes[gTimeIndex].description;
 		else
 			return "";
@@ -139,9 +154,22 @@ $(function () {
 		else 
 			return -1;
 	}
-
+	
+	
+	
 });
 
+function startStopClick() {
+		console.log("button value: " + $("#pausebutton").attr('value'));
+		if ($("#pausebutton").attr('value') == 'Stop') {
+			$("#pausebutton").attr('value','Start');
+			$('#glowingLayout').countdown('pause');
+		} else {
+			$("#pausebutton").attr('value','Stop');
+			$('#glowingLayout').countdown('resume'); 
+		}
+	}
+	
 function supports_html5_storage() {
   try {
     return 'localStorage' in window && window['localStorage'] !== null;
@@ -169,12 +197,13 @@ function supports_html5_storage() {
     <br />
     <div id="buttonDiv">
       <p>
-        <input id="pausebutton" type="button" value="Stop" />
+        <input id="pausebutton" type="button" value="Stop" onClick="startStopClick()" />
       </p>
     </div>
     <div id="monitor">
   	</div>
     <div id="timerAlert">
+    Message Goes Here
   	</div>
 	</div>
 </div>
