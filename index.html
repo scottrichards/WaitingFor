@@ -162,9 +162,11 @@ $(function () {
 function startStopClick() {
 		console.log("button value: " + $("#pausebutton").attr('value'));
 		if ($("#pausebutton").attr('value') == 'Stop') {
+			$("#buttonDiv span.ui-btn-text").html('Start');
 			$("#pausebutton").attr('value','Start');
 			$('#glowingLayout').countdown('pause');
 		} else {
+			$("#buttonDiv span.ui-btn-text").html('Stop');
 			$("#pausebutton").attr('value','Stop');
 			$('#glowingLayout').countdown('resume'); 
 		}
